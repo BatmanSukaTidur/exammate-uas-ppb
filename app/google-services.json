@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "380918861158",
+    "firebase_url": "https://exammate-9db6b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "exammate-9db6b",
+    "storage_bucket": "exammate-9db6b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380918861158:android:eae7512f0c0132446fcca7",
+        "android_client_info": {
+          "package_name": "com.exammate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFlChv320e7In8vxYio5amNgjTzT_uNCU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
