@@ -284,14 +284,17 @@ class HalamanUjianViewModel @Inject constructor(
             val kosong = total - state.selectedAnswers.size
 
             val uid = user?.nis ?: "unknown"
-            examRepository.submitAnswers(
+            val answerResult = examRepository.submitAnswers(
                 examId = ujian.id,
                 studentUid = uid,
                 jawaban = state.selectedAnswers,
                 flagged = state.flaggedQuestions,
                 waktuPengerjaan = (ujian.durasiMenit * 60) - state.remainingTimeSeconds
             )
-            examRepository.saveResult(
+            if (answerResult.isFailure) {
+                android.util.Log.e("HalamanUjian", "Gagal submit jawaban", answerResult.exceptionOrNull())
+            }
+            val saveResult = examRepository.saveResult(
                 examId = ujian.id,
                 studentUid = uid,
                 score = score,
@@ -300,6 +303,9 @@ class HalamanUjianViewModel @Inject constructor(
                 salah = salah.coerceAtLeast(0),
                 kosong = kosong.coerceAtLeast(0)
             )
+            if (saveResult.isFailure) {
+                android.util.Log.e("HalamanUjian", "Gagal simpan nilai", saveResult.exceptionOrNull())
+            }
         }
     }
 

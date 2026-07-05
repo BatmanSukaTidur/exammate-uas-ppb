@@ -2,6 +2,8 @@ package com.exammate.app.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.exammate.app.data.model.User
 import com.exammate.app.data.remote.firebase.FirebaseAuthSource
 import com.exammate.app.domain.repository.AuthRepository
@@ -16,8 +18,18 @@ class AuthRepositoryImpl @Inject constructor(
     private val dummyRepo: DummyDataRepository
 ) : AuthRepository {
 
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("exammate_auth", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = run {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            "exammate_secure_pref",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     override suspend fun register(
         nis: String, nama: String, email: String, password: String,
@@ -71,7 +83,7 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = userResult.getOrNull()!!
                 val dummy = dummyRepo.getLoginUserByNis(nis)
                 val enriched = if (user.mapel.isBlank() && dummy != null) {
-                    user.copy(mapel = dummy.mapel, role = dummy.role)
+                    user.copy(mapel = dummy.mapel)
                 } else user
                 saveSession(firebaseUser.uid, enriched)
                 return Result.success(enriched)
@@ -149,7 +161,7 @@ class AuthRepositoryImpl @Inject constructor(
             .putString("kelas", user.kelas)
             .putString("sekolah", user.sekolah)
             .putString("mapel", user.mapel)
-            .commit()
+            .apply()
     }
 
     override fun getSavedUser(): User? {
@@ -183,7 +195,7 @@ class AuthRepositoryImpl @Inject constructor(
         val list = completed.split(",").filter { it.isNotBlank() }
         if (list.contains(examId.toString())) return
         val updated = if (list.isEmpty()) examId.toString() else "$completed,$examId"
-        prefs.edit().putString("completed_exams_$nis", updated).commit()
+        prefs.edit().putString("completed_exams_$nis", updated).apply()
     }
 
     override fun saveExamResult(examId: Int, score: Int, total: Int, correct: Int, answeredCount: Int) {
@@ -192,7 +204,7 @@ class AuthRepositoryImpl @Inject constructor(
             .putInt("exam_total_$examId", total)
             .putInt("exam_correct_$examId", correct)
             .putInt("exam_answered_$examId", answeredCount)
-            .commit()
+            .apply()
     }
 
     override fun getExamScore(examId: Int): Int = prefs.getInt("exam_score_$examId", -1)
@@ -227,7 +239,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun logout() {
-        prefs.edit().clear().commit()
+        prefs.edit().clear().apply()
         firebaseAuth.signOut()
     }
 }

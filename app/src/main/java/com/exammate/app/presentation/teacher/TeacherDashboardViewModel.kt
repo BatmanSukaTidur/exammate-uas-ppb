@@ -51,4 +51,8 @@ class TeacherDashboardViewModel @Inject constructor(
             )
         }
     }
+
+    fun logout() {
+        authRepository.logout()
+    }
 }

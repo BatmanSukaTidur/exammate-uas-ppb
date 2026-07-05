@@ -60,8 +60,17 @@ class FirebaseAuthSource @Inject constructor() {
     suspend fun getUserData(uid: String): Result<com.exammate.app.data.model.User> {
         return try {
             val snapshot = db.getReference("users").child(uid).get().await()
-            val user = snapshot.getValue<com.exammate.app.data.model.User>()
+            val fbUser = snapshot.getValue<com.exammate.app.data.remote.firebase.FirebaseUser>()
                 ?: return Result.failure(Exception("User data not found"))
+            val user = com.exammate.app.data.model.User(
+                nis = fbUser.nis,
+                nama = fbUser.nama,
+                email = fbUser.email,
+                kelas = fbUser.kelas,
+                sekolah = fbUser.sekolah,
+                role = fbUser.role.ifBlank { "MURID" },
+                mapel = fbUser.mapel
+            )
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)

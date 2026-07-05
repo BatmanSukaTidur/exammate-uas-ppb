@@ -209,7 +209,10 @@ fun TeacherDashboardScreen(
                 title = "Keluar",
                 desc = "Logout dari akun guru",
                 color = Error,
-                onClick = onLogout
+                onClick = {
+                    viewModel.logout()
+                    onLogout()
+                }
             )
         }
 

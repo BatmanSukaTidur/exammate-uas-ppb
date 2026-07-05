@@ -45,6 +45,6 @@ class ExamRepositoryImpl @Inject constructor(
         salah: Int,
         kosong: Int
     ): Result<Unit> {
-        return firebaseRTDB.saveResult(examId, studentUid, score, totalSoal, salah, kosong, benar)
+        return firebaseRTDB.saveResult(examId, studentUid, score, totalSoal, benar, salah, kosong)
     }
 }

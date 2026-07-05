@@ -70,13 +70,14 @@ fun ExammateApp() {
             LoginScreen(
                 onLoginSuccess = { role ->
                     isLoggedIn = true
-                    val destination = if (role == "GURU") {
-                        Screen.TeacherDashboard.route
-                    } else {
-                        Screen.Main.route
+                    val destination: String
+                    when (role.uppercase()) {
+                        "MURID" -> destination = Screen.Main.route
+                        "GURU" -> destination = Screen.TeacherDashboard.route
+                        else -> destination = Screen.Login.route
                     }
                     navController.navigate(destination) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onRegisterClick = {
@@ -110,7 +111,7 @@ fun ExammateApp() {
                 onLogout = {
                     isLoggedIn = false
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Main.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
@@ -131,7 +132,7 @@ fun ExammateApp() {
                 onLogout = {
                     isLoggedIn = false
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.TeacherDashboard.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

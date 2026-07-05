@@ -6,7 +6,8 @@ data class FirebaseUser(
     val email: String = "",
     val kelas: String = "",
     val sekolah: String = "",
-    val role: String = "MURID"
+    val role: String = "MURID",
+    val mapel: String = ""
 )
 
 data class FirebaseSoal(
