@@ -5,6 +5,13 @@ Copy rules ini ke Firebase Console → Realtime Database → Rules.
 ```json
 {
   "rules": {
+    "nis_lookup": {
+      ".read": true,
+      ".write": "auth != null",
+      "$nis": {
+        ".validate": "newData.isString()"
+      }
+    },
     "users": {
       "$uid": {
         ".read": "auth.uid == $uid",

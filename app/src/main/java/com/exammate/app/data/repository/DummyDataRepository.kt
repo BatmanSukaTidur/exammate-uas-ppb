@@ -74,11 +74,6 @@ class DummyDataRepository @Inject constructor() {
         Soal(5, 5, "Planet terbesar dalam tata surya adalah...", listOf("Mars", "Venus", "Saturnus", "Jupiter", "Neptunus"), 3)
     )
 
-    private val guruMatematika = User("11111", "Budi Santoso", "budi@email.com", "Guru", "SMAN 115 Jakarta", "GURU", "Matematika")
-    private val guruBIndo = User("22222", "Siti Rahayu", "siti@email.com", "Guru", "SMAN 115 Jakarta", "GURU", "Bahasa Indonesia")
-    private val guruInggris = User("33333", "John Doe", "john@email.com", "Guru", "SMAN 115 Jakarta", "GURU", "Bahasa Inggris")
-    private val guruIPA = User("44444", "Rina Wijaya", "rina@email.com", "Guru", "SMAN 115 Jakarta", "GURU", "IPA")
-
     val daftarUjian: List<Ujian>
         get() {
             val today = LocalDate.now()
@@ -121,13 +116,6 @@ class DummyDataRepository @Inject constructor() {
         TeacherQuestionCategory(4, "IPA", soalIPA)
     )
 
-    private val dummyUsers = mutableMapOf<String, Pair<String, User>>(
-        "11111" to ("11111" to guruMatematika),
-        "22222" to ("22222" to guruBIndo),
-        "33333" to ("33333" to guruInggris),
-        "44444" to ("44444" to guruIPA)
-    )
-
     private val studentResults = mutableMapOf<Int, MutableList<StudentExamResult>>()
 
     fun saveStudentResult(result: StudentExamResult) {
@@ -143,41 +131,7 @@ class DummyDataRepository @Inject constructor() {
     fun getAllStudentResults(): List<StudentExamResult> =
         studentResults.values.flatten()
 
-    fun registerDummyUser(user: User, password: String): Boolean {
-        if (dummyUsers.containsKey(user.nis)) return false
-        dummyUsers[user.nis] = password to user
-        return true
-    }
-
-    fun getLoginUser(nisOrEmail: String, password: String): Pair<String?, User?> {
-        val entry = dummyUsers[nisOrEmail]
-        if (entry != null && entry.first == password) {
-            return entry.second.role to entry.second
-        }
-        for ((_, stored) in dummyUsers) {
-            if (stored.second.email == nisOrEmail && stored.first == password) {
-                return stored.second.role to stored.second
-            }
-        }
-        return null to null
-    }
-
-    fun getLoginUserByRole(nis: String, password: String, role: String): User? {
-        val (foundRole, user) = getLoginUser(nis, password)
-        return if (foundRole == role) user else null
-    }
-
-    fun getLoginUserByNis(nis: String): User? {
-        return dummyUsers[nis]?.second
-    }
-
     companion object {
-        private val VALID_NIS_RANGE = (240109001L..240109010L).map { it.toString() }.toSet()
-
-        fun isValidStudentNis(nis: String): Boolean {
-            return nis.matches(Regex("^\\d+$")) && nis in VALID_NIS_RANGE
-        }
-
         fun isValidName(nama: String): Boolean {
             return nama.matches(Regex("^[a-zA-Z\\s]+$"))
         }

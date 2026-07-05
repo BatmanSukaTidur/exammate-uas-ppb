@@ -14,8 +14,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val firebaseAuth: FirebaseAuthSource,
-    private val dummyRepo: DummyDataRepository
+    private val firebaseAuth: FirebaseAuthSource
 ) : AuthRepository {
 
     private val prefs: SharedPreferences = run {
@@ -64,7 +63,14 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun login(nis: String, email: String, password: String): Result<User> {
-        val loginEmail = if (email.isNotBlank()) email else "$nis@exammate.app"
+        var loginEmail = if (email.isNotBlank()) email else "$nis@exammate.app"
+
+        if (!nis.contains("@")) {
+            val emailResult = firebaseAuth.getEmailByNis(nis)
+            if (emailResult.isSuccess) {
+                loginEmail = emailResult.getOrNull()!!
+            }
+        }
 
         val fbResult = try {
             firebaseAuth.signIn(loginEmail, password)
@@ -81,31 +87,21 @@ class AuthRepositoryImpl @Inject constructor(
             }
             if (userResult.isSuccess) {
                 val user = userResult.getOrNull()!!
-                val dummy = dummyRepo.getLoginUserByNis(nis)
-                val enriched = if (user.mapel.isBlank() && dummy != null) {
-                    user.copy(mapel = dummy.mapel)
-                } else user
-                saveSession(firebaseUser.uid, enriched)
-                return Result.success(enriched)
+                saveSession(firebaseUser.uid, user)
+                return Result.success(user)
             }
             val savedUser = getSavedUser()
-            val dummy = dummyRepo.getLoginUserByNis(nis)
             val fallbackUser = User(
-                nis = dummy?.nis ?: savedUser?.nis ?: loginEmail.substringBefore("@"),
-                nama = dummy?.nama ?: savedUser?.nama ?: firebaseUser.displayName ?: loginEmail.substringBefore("@"),
+                nis = savedUser?.nis ?: loginEmail.substringBefore("@"),
+                nama = savedUser?.nama ?: firebaseUser.displayName ?: loginEmail.substringBefore("@"),
                 email = loginEmail,
-                kelas = dummy?.kelas ?: savedUser?.kelas ?: "",
-                sekolah = dummy?.sekolah ?: savedUser?.sekolah ?: "SMAN 115 Jakarta",
-                role = dummy?.role ?: savedUser?.role ?: "MURID",
-                mapel = dummy?.mapel ?: ""
+                kelas = savedUser?.kelas ?: "",
+                sekolah = savedUser?.sekolah ?: "SMAN 115 Jakarta",
+                role = savedUser?.role ?: "MURID",
+                mapel = savedUser?.mapel ?: ""
             )
             saveSession(firebaseUser.uid, fallbackUser)
             return Result.success(fallbackUser)
-        }
-
-        val (_, dummyUser) = dummyRepo.getLoginUser(nis, password)
-        if (dummyUser != null) {
-            return migrateAndLogin(dummyUser, password, loginEmail)
         }
 
         val savedUser = getSavedUser()
@@ -113,7 +109,7 @@ class AuthRepositoryImpl @Inject constructor(
             return migrateAndLogin(savedUser, password, loginEmail)
         }
 
-        val nisExists = firebaseAuth.isNisRegistered(nis) || dummyRepo.getLoginUserByNis(nis) != null
+        val nisExists = firebaseAuth.isNisRegistered(nis)
         return if (nisExists) {
             Result.failure(Exception("Password salah"))
         } else {
@@ -233,9 +229,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isNisRegistered(nis: String): Boolean {
-        if (firebaseAuth.isNisRegistered(nis)) return true
-        if (dummyRepo.getLoginUserByNis(nis) != null) return true
-        return false
+        return firebaseAuth.isNisRegistered(nis)
     }
 
     override fun logout() {

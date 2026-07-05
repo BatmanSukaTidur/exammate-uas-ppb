@@ -63,8 +63,8 @@ class RegisterViewModel @Inject constructor(
             _uiState.value = state.copy(nisError = "NIS tidak boleh kosong")
             return
         }
-        if (!DummyDataRepository.isValidStudentNis(state.nis)) {
-            _uiState.value = state.copy(nisError = "NIS tidak ditemukan")
+        if (!state.nis.matches(Regex("^\\d{5,20}$"))) {
+            _uiState.value = state.copy(nisError = "NIS tidak valid")
             return
         }
         if (state.nama.isBlank()) {
@@ -102,7 +102,7 @@ class RegisterViewModel @Inject constructor(
             if (isRegistered) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    nisError = "NIS sudah terdaftar"
+                    nisError = "NIS sudah dipakai"
                 )
                 return@launch
             }

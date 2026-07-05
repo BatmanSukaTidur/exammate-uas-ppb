@@ -32,6 +32,7 @@ class FirebaseAuthSource @Inject constructor() {
 
     suspend fun saveUserData(uid: String, user: com.exammate.app.data.model.User) {
         db.getReference("users").child(uid).setValue(user).await()
+        db.getReference("nis_lookup").child(user.nis).setValue(user.email).await()
     }
 
     suspend fun signIn(email: String, password: String): Result<FirebaseUser> {
@@ -46,14 +47,21 @@ class FirebaseAuthSource @Inject constructor() {
 
     suspend fun isNisRegistered(nis: String): Boolean {
         return try {
-            val snapshot = db.getReference("users")
-                .orderByChild("nis")
-                .equalTo(nis)
-                .get()
-                .await()
-            snapshot.exists() && snapshot.childrenCount > 0
+            val snapshot = db.getReference("nis_lookup").child(nis).get().await()
+            snapshot.exists()
         } catch (_: Exception) {
             false
+        }
+    }
+
+    suspend fun getEmailByNis(nis: String): Result<String> {
+        return try {
+            val snapshot = db.getReference("nis_lookup").child(nis).get().await()
+            val email = snapshot.getValue(String::class.java)
+            if (email != null) Result.success(email)
+            else Result.failure(Exception("NIS not found"))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
